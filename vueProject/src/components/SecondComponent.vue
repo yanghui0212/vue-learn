@@ -6,7 +6,7 @@
     <span>{{num}}</span><br>
     <span>{{obj.count}}</span>
     <p>
-      <button @click="add">add1</button>
+      <button @click="add">add</button>
     </p>
   </div>
 </template>
@@ -30,6 +30,46 @@
       add() {
         this.num++;
       }
+    },
+    //
+    beforeCreate() {
+      console.log("beforeCreate+++");
+    },
+    //
+    created() {
+      console.log("created+++");
+    },
+    //
+    beforeMount() {
+      console.log("beforeMount+++");
+    },
+    //
+    mounted() {
+      console.log("mounted+++");
+    },
+    //
+    beforeUpdate() {
+      console.log("beforeUpdate+++");
+    },
+    //
+    updated() {
+      console.log("updated+++");
+    },
+    //
+    activated() {
+      console.log("activated+++");
+    },
+    //
+    deactivated() {
+      console.log("deactivated+++");
+    },
+    //
+    beforeDestroy() {
+      console.log("beforeDestroy+++");
+    },
+    //
+    deactivated() {
+      console.log("deactivated+++");
     }
   }
 </script>

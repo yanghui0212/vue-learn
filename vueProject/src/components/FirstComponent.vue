@@ -1,60 +1,66 @@
 <template>
   <div id="first-component">
-    <span v-html="html"></span>
+    <!--<router-view></router-view>-->
     <el-container style="height: 800px; border: 1px solid #eee">
       <el-aside width="200px" style="background-color: rgb(238, 241, 246)">
-        <el-menu :default-openeds="['1', '3']">
+        <el-menu style="min-height: 100%;" theme="dark" router>
           <el-submenu index="1">
             <template slot="title"><i class="el-icon-message"></i>导航一</template>
             <el-menu-item-group>
-              <template slot="title">分组一</template>
-              <el-menu-item index="1-1">
-                <router-link to="/first">Go to first component!</router-link>
-              </el-menu-item>
-              <el-menu-item index="1-2">
-                <router-link to="/second">Go to second component!</router-link>
-              </el-menu-item>
+              <el-menu-item index="first">页面1</el-menu-item>
+              <el-menu-item index="second">页面2</el-menu-item>
             </el-menu-item-group>
-            <el-menu-item-group title="分组2">
-              <el-menu-item index="1-3">选项3</el-menu-item>
-            </el-menu-item-group>
-            <el-submenu index="1-4">
-              <template slot="title">选项4</template>
-              <el-menu-item index="1-4-1">选项4-1</el-menu-item>
-            </el-submenu>
           </el-submenu>
         </el-menu>
+        <el-col :span="20" style="height: 100%;overflow: auto;">
+          <keep-alive>
+            <router-view></router-view>
+          </keep-alive>
+        </el-col>
       </el-aside>
-
       <el-container>
         <el-header style="text-align: center; font-size: 12px;padding: 20px;">
           <el-form :inline="true" :model="formData" class="demo-form-inline">
-            <el-form-item label="姓名">
-              <el-input v-model="formData.name" placeholder="姓名"></el-input>
+            <el-form-item label="发货方式">
+              <el-input v-model="formData.deliveryWay" placeholder="发货方式"></el-input>
             </el-form-item>
-            <el-form-item v-model="formData.zip" label="邮编">
-              <el-input placeholder="邮编"></el-input>
+            <el-form-item label="渠道代码">
+              <el-input v-model="formData.foreignCourier" placeholder="渠道代码"></el-input>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="showTableData">查询</el-button>
+              <el-button type="primary" @click="queryDeliveredWayForeignCourier">查询</el-button>
             </el-form-item>
           </el-form>
         </el-header>
         <el-main>
-          <el-table :data="getTableData3" style="width: 60%" height="250">
-            <el-table-column fixed prop="date" label="日期" width="150">
+          <el-table :data="deliveredWayForeignCourier.data" style="width: 80%;height: 60%" border>
+            <el-table-column fixed="left" type="index" label="序号" tabindex="">
             </el-table-column>
-            <el-table-column prop="name" label="姓名" width="120">
+            <el-table-column fixed prop="deliveryWay" label="发货方式">
             </el-table-column>
-            <el-table-column prop="province" label="省份" width="120">
+            <el-table-column fixed prop="foreignCourier" label="渠道代码">
             </el-table-column>
-            <el-table-column prop="city" label="市区" width="120">
-            </el-table-column>
-            <el-table-column prop="address" label="地址" width="300">
-            </el-table-column>
-            <el-table-column prop="zip" label="邮编" width="120">
+            <el-table-column fixed label="操作">
+              <template slot-scope="scope">
+                <el-button @click="removeData(scope.$index,deliveredWayForeignCourier.data)" type="text" size="small">
+                  删除
+                </el-button>
+                <el-button type="text" size="small">
+                  <el-button @click="viewShow(scope.$index,deliveredWayForeignCourier.data)" type="text" size="small">
+                    查看
+                  </el-button>
+                </el-button>
+              </template>
             </el-table-column>
           </el-table>
+          <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :page-sizes="[2, 4, 6, 8]"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="totalLength">
+          </el-pagination>
         </el-main>
       </el-container>
     </el-container>
@@ -62,61 +68,79 @@
 </template>
 
 <script>
-  import fecha from 'fecha';
+  import axios from 'axios';
 
   export default {
     name: 'firstComponent',
     data() {
       return {
-        html: '<h2>h2标签！</h2>',
-        author: 'yangqianghui@hotmail.com',
-        msg: 'now is ' + fecha.format(new Date(), 'YYYY-MM-dd HH:mm:ss.sss'),
-        date: new Date(),
-        flag: true,
+        dataUrl: 'http://qa.uexpress.tuochetong.com/ws-uexpress/u_express/delivered_way_foreign_courier',
         formData: {
-          name: '',
-          zip: ''
+          deliveryWay: '',
+          foreignCourier: ''
         },
-        tableData3: [{
-          date: fecha.format(new Date(), 'YYYY-MM-dd HH:mm:ss.sss'),
-          name: '王小虎',
-          province: '上海',
-          city: '普陀区',
-          address: '上海市普陀区金沙江路 1518 弄',
-          zip: 200333
-        }]
+        totalLength: 0,
+        pageSize: 2,
+        pageNumber1: 1,
+        deliveredWayForeignCourier: {
+          data: []
+        }
       }
     },
     methods: {
-      showTableData() {
-        console.log(this.tableData3);
-        this.tableData3.push({
-          date: fecha.format(new Date(), 'YYYY-MM-dd HH:mm:ss.sss'),
-          name: '王小虎',
-          province: '上海',
-          city: '普陀区',
-          address: '上海市普陀区金沙江路 1518 弄',
-          zip: 200333
+      queryDeliveredWayForeignCourier() {
+        this.showData();
+      },
+      removeData(index, arr) {
+        console.log(index);
+        console.log(arr);
+        arr.splice(index, 1);
+
+      },
+      viewShow(index, arr) {
+        this.$router.push({
+          name: 'view-component',
+          params: {deliveredWay: arr[index].deliveryWay, foreignCourier: arr[index].foreignCourier}
+        })
+      }
+      ,
+      showData() {
+        let vm = this;
+        axios.get(vm.dataUrl).then(function (res) {
+          vm.deliveredWayForeignCourier = res.data;
+          var list = res.data.data.filter(function (ele, index, array) {
+            let flag = true;
+            if (vm.formData.deliveryWay) {
+              if (ele.deliveryWay.indexOf(vm.formData.deliveryWay) > -1) {
+                flag = true;
+              } else {
+                flag = false;
+              }
+            }
+            if (vm.formData.foreignCourier) {
+              if (ele.foreignCourier.indexOf(vm.formData.foreignCourier) > -1) {
+                flag = true;
+              } else {
+                flag = false;
+              }
+            }
+            return flag;
+          });
+          vm.totalLength = list.length;
+          vm.deliveredWayForeignCourier.data = list;
         });
+      },
+      handleSizeChange(val) {
+        this.pageSize = val;
+      },
+      handleCurrentChange(val) {
+        console.log(val)
+
       }
     },
     created() {
-      let vm = this;
-      setTimeout(function () {
-        vm.tableData3.push({
-          date: fecha.format(new Date(), 'YYYY-MM-dd HH:mm:ss.sss'),
-          name: '王小虎',
-          province: '上海',
-          city: '普陀区',
-          address: '上海市普陀区金沙江路 1518 弄',
-          zip: 200333
-        });
-      }, 10000)
+      this.showData();
     },
-    computed: {
-      getTableData3: function () {
-        return this.tableData3;
-      }
-    }
+    computed: {}
   }
 </script>
